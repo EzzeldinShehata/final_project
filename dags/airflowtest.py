@@ -8,7 +8,7 @@ def greet():
     logging.info("Hello from Airflow!")
     logging.warning("This is a warning message for testing purposes.")
     logging.error("This is an error message for testing purposes.")
-    logging.critical("This is a critical message for testing purposes.")
+    logging.critical("This is a criticals messsage for testing purposes.")
 
 
 def greet2():
