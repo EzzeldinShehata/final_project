@@ -14,7 +14,7 @@ default_args = {
 
 # ---------------- DAG ---------------- #
 with DAG(
-    dag_id="postgres_to_gcs_orders_products_ezz",
+    dag_id="postgres_to_gcs_orders_products_ezzeldein",
     default_args=default_args,
     description="Export Postgres tables into GCS as CSV",
     schedule_interval="30 12 * * *",  # runs daily at 3:30 PM Egypt (12:30 UTC)
