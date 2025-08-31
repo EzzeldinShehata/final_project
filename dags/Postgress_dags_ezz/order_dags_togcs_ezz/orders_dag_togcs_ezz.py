@@ -41,7 +41,7 @@ with DAG(
             postgres_conn_id="postgres_orders_ezzeldein",   # connection ID  addedfrom Airflow UI
             sql=f"""
                 SELECT * FROM public.{table}
-                WHERE updated_at_timestamp >= '{{{{ ds }}}}'::date
+                WHERE updated_at_timestamp >= '2025-08-22'
             """,
             bucket=BUCKET_NAME,
             filename=f"{table}/{table}_{{{{ ds_nodash }}}}.csv",
