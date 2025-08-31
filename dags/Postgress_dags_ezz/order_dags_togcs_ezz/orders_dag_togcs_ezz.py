@@ -20,7 +20,7 @@ BUCKET_NAME = "orders_products_ezzeldein"
 # DAG Definition
 # ----------------------------
 with DAG(
-    dag_id="postgres_to_gcs_incremental_operator",
+    dag_id="postgres_to_gcs_incremental_operator_ezz", #dag id
     default_args=default_args,
     schedule_interval="30 15 * * *",  # run daily at 3:30 PM UTC
     catchup=False,
