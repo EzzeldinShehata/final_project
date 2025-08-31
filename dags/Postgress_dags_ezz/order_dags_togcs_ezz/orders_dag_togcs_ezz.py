@@ -1,10 +1,6 @@
 from airflow import DAG
-from airflow.operators.python import PythonOperator
-from airflow.providers.postgres.hooks.postgres import PostgresHook
-from google.cloud import storage
+from airflow.providers.google.cloud.transfers.postgres_to_gcs import PostgresToGCSOperator
 from datetime import datetime
-import pandas as pd
-import os
 
 # ----------------------------
 # Default DAG arguments
@@ -21,47 +17,10 @@ default_args = {
 BUCKET_NAME = "orders_products_ezzeldein"
 
 # ----------------------------
-# Extract + Upload function
-# ----------------------------
-def extract_and_upload(table, execution_date, **kwargs):
-    # Connect to Postgres without needing Admin setup
-    pg_hook = PostgresHook(
-        postgres_conn_id=None,
-        host="34.173.180.170",
-        schema="postgres",
-        login="postgres",
-        password="Ready-de26",
-        port=5432,
-    )
-
-    sql = f"""
-        SELECT *
-        FROM public.{table}
-        WHERE updated_at_timestamp <= '{execution_date}'::date
-    """
-    df = pg_hook.get_pandas_df(sql)
-
-    if df.empty:
-        print(f"No new rows for table {table} on {execution_date}")
-        return
-
-    # Save as CSV locally
-    file_name = f"/tmp/{table}-{execution_date.replace('-', '')}.csv"
-    df.to_csv(file_name, index=False)
-
-    # Upload to GCS
-    client = storage.Client()
-    bucket = client.bucket(BUCKET_NAME)
-    blob = bucket.blob(f"{table}/{os.path.basename(file_name)}")
-    blob.upload_from_filename(file_name)
-
-    print(f"Uploaded {file_name} to gs://{BUCKET_NAME}/{table}/")
-
-# ----------------------------
 # DAG Definition
 # ----------------------------
 with DAG(
-    dag_id="postgres_to_gcs_incremental_ezz",
+    dag_id="postgres_to_gcs_incremental_operator",
     default_args=default_args,
     schedule_interval="30 15 * * *",  # run daily at 3:30 PM UTC
     catchup=False,
@@ -77,12 +36,15 @@ with DAG(
     ]
 
     for table in tables:
-        PythonOperator(
+        PostgresToGCSOperator(
             task_id=f"load_{table}_to_gcs",
-            python_callable=extract_and_upload,
-            op_kwargs={
-                "table": table,
-                "execution_date": "{{ ds }}",  # Airflow will inject the run date
-            },
-            provide_context=True,
+            postgres_conn_id="postgres_orders_ezzeldein",   # connection ID from Airflow UI
+            sql=f"""
+                SELECT * FROM public.{table}
+                WHERE updated_at_timestamp >= '{{{{ ds }}}}'::date
+            """,
+            bucket=BUCKET_NAME,
+            filename=f"{table}/{table}_{{{{ ds_nodash }}}}.csv",
+            export_format="csv",
+            gzip=False,
         )
