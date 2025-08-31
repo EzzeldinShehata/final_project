@@ -38,7 +38,7 @@ with DAG(
     for table in tables:
         PostgresToGCSOperator(
             task_id=f"load_{table}_to_gcs",
-            postgres_conn_id="postgres_orders_ezzeldein",   # connection ID from Airflow UI
+            postgres_conn_id="postgres_orders_ezzeldein",   # connection ID  addedfrom Airflow UI
             sql=f"""
                 SELECT * FROM public.{table}
                 WHERE updated_at_timestamp >= '{{{{ ds }}}}'::date
